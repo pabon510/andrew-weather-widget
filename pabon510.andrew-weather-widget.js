@@ -159,11 +159,23 @@
         });
     }, [city]);
 
-    // Choose background gradient based on day or night.
-    function getGradient(isDay) {
-      return isDay
-        ? "linear-gradient(160deg, #89CFF0 0%, #6BC7FF 100%)"
-        : "linear-gradient(160deg, #2C3E50 0%, #243B55 100%)";
+    // Choose a background gradient based on the time of day and overall conditions.
+    // In addition to day/night, rainier descriptions use a darker palette to more
+    // closely match the reference design.  The description string is checked
+    // for common rain/drizzle keywords; otherwise a bright blue gradient is used.
+    function getGradient(isDay, description) {
+      // Normalize description for safe matching
+      const desc = (description || '').toLowerCase();
+      // Night time cards always use a dark navy gradient
+      if (!isDay) {
+        return 'linear-gradient(160deg, #2C3E50 0%, #243B55 100%)';
+      }
+      // Use a darker slate gradient when the weather is wet or stormy
+      if (desc.includes('rain') || desc.includes('shower') || desc.includes('drizzle') || desc.includes('thunder')) {
+        return 'linear-gradient(160deg, #455a64 0%, #37474f 100%)';
+      }
+      // Default daytime palette – bright blue gradient for clear or cloudy skies
+      return 'linear-gradient(160deg, #89CFF0 0%, #6BC7FF 100%)';
     }
 
     // Render the card UI.  Always prefer Fahrenheit for numeric values, per user
@@ -177,7 +189,8 @@
             minHeight: "250px",
             borderRadius: "16px",
             padding: "20px",
-            background: getGradient(true),
+            // Loading state uses the daytime gradient since we don't yet know the conditions
+            background: getGradient(true, ''),
             color: "white",
             display: "flex",
             alignItems: "center",
@@ -197,7 +210,8 @@
             minHeight: "250px",
             borderRadius: "16px",
             padding: "20px",
-            background: getGradient(false),
+            // Error state defaults to night styling for readability
+            background: getGradient(false, ''),
             color: "white",
             display: "flex",
             alignItems: "center",
@@ -214,8 +228,10 @@
       width: "100%",
       borderRadius: "16px",
       padding: "20px",
-      color: weather.isDay ? "#2A3A4B" : "#F5F5F5",
-      background: getGradient(weather.isDay),
+      // Always use white text for good contrast regardless of day/night
+      color: "#FFFFFF",
+      // Compute gradient based on time of day and description
+      background: getGradient(weather.isDay, weather.description),
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
